@@ -1,0 +1,76 @@
+
+uprobe:/usr/local/pgsql/bin/postgres:CreateCachedPlan
+{
+    $time = nsecs;
+    @create_cache[pid] = $time;
+    @query[pid] = str(arg1);
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:CreateCachedPlan
+{
+    $time = nsecs;
+    printf("pid: [%d] Creating cache plan for query '%s' time: %d mcs\n", pid, @query[pid], ($time - @create_cache[pid])/1000);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:CompleteCachedPlan
+{
+    $time = nsecs;
+    @complete_cache[pid] = $time;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:CompleteCachedPlan
+{
+    $time = nsecs;
+    printf("pid: [%d] Completing cache plan for query '%s' time: %d mcs\n", pid, @query[pid], ($time - @complete_cache[pid])/1000);
+}
+
+//Function saves cache plan for query '%s' permanently in ba@query[pid], ckend
+uprobe:/usr/local/pgsql/bin/postgres:SaveCachedPlan
+{
+    $time = nsecs;
+    @save_cache[pid] = nsecs
+}
+
+
+uretprobe:/usr/local/pgsql/bin/postgres:SaveCachedPlan
+{
+    $time = nsecs;
+    printf("pid: [%d] Saving cache plan for query '%s' time: %d mcs\n", pid, @query[pid], ($time - @save_cache[pid])/1000);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:GetCachedPlan
+{
+    $time = nsecs;
+    @get_cache[pid] = $time;
+    @get_counter[pid, @query[pid]]++;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:GetCachedPlan
+{
+    $time = nsecs;
+    printf("pid: [%d] Getting cache plan for query '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @get_cache[pid])/1000,
+    @get_counter[pid, @query[pid]]);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check
+{
+    $time = nsecs;
+    @get_cache[pid] = $time;
+    @get_counter[pid, @query[pid]]++;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check
+{
+    $time = nsecs;
+    printf("pid: [%d] Foreign key check for query '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @get_cache[pid])/1000,
+    @get_counter[pid, @query[pid]]);
+}
+
+END {
+    clear(@create_cache);
+    clear(@complete_cache);
+    clear(@save_cache);
+    clear(@get_cache);
+    clear(@query);
+    clear(@get_counter);
+}
