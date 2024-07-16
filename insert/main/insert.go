@@ -12,7 +12,7 @@ import (
 func tableExists(db *sql.DB, tableName string) bool {
 	var exists bool
 	err := db.QueryRow(
-		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1)", tableName).
+		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = " + tableName + ")").
 		Scan(&exists)
 	handleError(err)
 	return exists
@@ -30,7 +30,7 @@ func wrapExec(db *sql.DB, query string, args ...interface{}) {
 }
 
 func wrapQueryTxLocks(tx *sql.Tx, tableName string, goroutine int) {
-	rows, err := tx.Query("SELECT * FROM pgrowlocks($1) limit 1", tableName)
+	rows, err := tx.Query("SELECT * FROM pgrowlocks(" + tableName + ") limit 1")
 	handleError(err)
 	for rows.Next() {
 		var lockedRow, locker, multi, xids, modes, pids string
@@ -52,13 +52,16 @@ func main() {
 	}(db)
 
 	// Checking if table exists
-	if !tableExists(db, "teams") {
+	if !tableExists(db, "'teams'") {
 		wrapExec(db, "CREATE TABLE teams (tid serial PRIMARY KEY)")
+		for i := 1; i <= 10; i++ {
+			wrapExec(db, "INSERT INTO teams (tid) VALUES (DEFAULT)")
+		}
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
-	if !tableExists(db, "employees") {
+	if !tableExists(db, "'employees'") {
 		wrapExec(db,
 			"CREATE TABLE employees (eid serial PRIMARY KEY, tid INTEGER REFERENCES teams (tid) ON UPDATE CASCADE)")
 		fmt.Println("Table created")
@@ -68,13 +71,14 @@ func main() {
 
 	var wg sync.WaitGroup
 	execTx := func(query string, goroutine int, sleepSecs time.Duration) {
+		fmt.Println("Start goroutine: ", goroutine)
 		defer wg.Done()
 		tx, err := db.Begin()
 		handleError(err)
 		_, err = tx.Exec(query)
 		handleError(err)
-		wrapQueryTxLocks(tx, "employees", goroutine)
-		wrapQueryTxLocks(tx, "teams", goroutine)
+		wrapQueryTxLocks(tx, "'employees'", goroutine)
+		wrapQueryTxLocks(tx, "'teams'", goroutine)
 
 		time.Sleep(sleepSecs * time.Second)
 		handleError(err)
@@ -82,12 +86,12 @@ func main() {
 	}
 
 	numTx := 5
-	wg.Add(numTx)
+	wg.Add(numTx * 2)
 	for i := 1; i <= numTx; i++ {
 		time.Sleep(time.Second)
 		go execTx("INSERT INTO employees(eid, tid) VALUES (DEFAULT, 1)", i, 12)
-		//time.Sleep(time.Second)
-		//go execTx("INSERT INTO teams(tid) VALUES (DEFAULT)", i+10, 10)
+		time.Sleep(time.Second)
+		go execTx("INSERT INTO teams(tid) VALUES (DEFAULT)", i+10, 12)
 	}
 
 	wg.Wait()

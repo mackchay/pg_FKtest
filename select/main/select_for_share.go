@@ -16,7 +16,7 @@ func handleError(err error) {
 }
 
 func wrapQueryTxLocks(tx *sql.Tx, tableName string, goroutine int) {
-	rows, err := tx.Query("SELECT * FROM pgrowlocks($1) limit 1", tableName)
+	rows, err := tx.Query("SELECT * FROM pgrowlocks('" + tableName + "') limit 1")
 	handleError(err)
 	for rows.Next() {
 		var lockedRow, locker, multi, xids, modes, pids string
@@ -36,7 +36,7 @@ func wrapExec(db *sql.DB, query string, args ...interface{}) {
 func tableExists(db *sql.DB, tableName string) bool {
 	var exists bool
 	err := db.QueryRow(
-		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1)", tableName).
+		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '" + tableName + "')").
 		Scan(&exists)
 	handleError(err)
 	return exists
@@ -55,9 +55,14 @@ func main() {
 	handleError(err)
 	handleError(err)
 
+	//Create pgrowlocks extension
+	wrapExec(db, "CREATE EXTENSION IF NOT EXISTS pgrowlocks")
 	// Checking if tables exist
 	if !tableExists(db, "teams") {
 		wrapExec(db, "CREATE TABLE teams (tid serial PRIMARY KEY)")
+		for i := 1; i <= 10; i++ {
+			wrapExec(db, "INSERT INTO teams (tid) VALUES "+string(rune(i)))
+		}
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
@@ -73,10 +78,9 @@ func main() {
 	var wg sync.WaitGroup
 
 	execTx := func(query string, goroutine int, sleepSecs time.Duration) {
+		fmt.Println("Start goroutine: ", goroutine)
 		defer wg.Done()
 		tx, err := db.Begin()
-		handleError(err)
-		_, err = tx.Exec(query)
 		handleError(err)
 		_, err = tx.Exec(query)
 		handleError(err)
