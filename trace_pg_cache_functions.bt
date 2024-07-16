@@ -52,17 +52,59 @@ uretprobe:/usr/local/pgsql/bin/postgres:GetCachedPlan
     @get_counter[pid, @query[pid]]);
 }
 
-uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check
+uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check_ins
 {
     $time = nsecs;
-    @get_cache[pid] = $time;
+    @check[pid] = $time;
     @get_counter[pid, @query[pid]]++;
 }
 
-uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check
+uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check_ins
 {
     $time = nsecs;
-    printf("pid: [%d] Foreign key check for query '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @get_cache[pid])/1000,
+    printf("pid: [%d] Foreign key check for INSERT '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @check[pid])/1000,
+    @get_counter[pid, @query[pid]]);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check_upd
+{
+    $time = nsecs;
+    @check[pid] = $time;
+    @get_counter[pid, @query[pid]]++;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_check_upd
+{
+    $time = nsecs;
+    printf("pid: [%d] Foreign key check for UPDATE '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @check[pid])/1000,
+    @get_counter[pid, @query[pid]]);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_cascade_upd
+{
+    $time = nsecs;
+    @check[pid] = $time;
+    @get_counter[pid, @query[pid]]++;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_cascade_upd
+{
+    $time = nsecs;
+    printf("pid: [%d] Foreign key CASCADE UPDATE '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @check[pid])/1000,
+    @get_counter[pid, @query[pid]]);
+}
+
+uprobe:/usr/local/pgsql/bin/postgres:RI_FKey_cascade_del
+{
+    $time = nsecs;
+    @check[pid] = $time;
+    @get_counter[pid, @query[pid]]++;
+}
+
+uretprobe:/usr/local/pgsql/bin/postgres:RI_FKey_cascade_del
+{
+    $time = nsecs;
+    printf("pid: [%d] Foreign key CASCADE DELETE '%s' time: %d mcs, counter: %d\n", pid, @query[pid], ($time - @check[pid])/1000,
     @get_counter[pid, @query[pid]]);
 }
 
@@ -73,4 +115,5 @@ END {
     clear(@get_cache);
     clear(@query);
     clear(@get_counter);
+    clear(@check);
 }

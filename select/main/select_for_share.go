@@ -98,7 +98,7 @@ func main() {
 		time.Sleep(1 * time.Second)
 		go execTx("SELECT * FROM employees FOR SHARE", i, 12)
 		time.Sleep(1 * time.Second)
-		go execTx("UPDATE teams SET tid = tid + 100 WHERE tid != 1", i+10, 1)
+		go execTx("UPDATE teams SET tid = tid + 1000 WHERE tid != 1", i+10, 1)
 	}
 	wg.Wait()
 }

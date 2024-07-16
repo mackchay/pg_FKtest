@@ -85,13 +85,11 @@ func main() {
 		err = tx.Commit()
 	}
 
-	numTx := 5
-	wg.Add(numTx * 2)
+	numTx := 25
+	wg.Add(numTx)
 	for i := 1; i <= numTx; i++ {
 		time.Sleep(time.Second)
 		go execTx("INSERT INTO employees(eid, tid) VALUES (DEFAULT, 1)", i, 12)
-		time.Sleep(time.Second)
-		go execTx("INSERT INTO teams(tid) VALUES (DEFAULT)", i+10, 12)
 	}
 
 	wg.Wait()
