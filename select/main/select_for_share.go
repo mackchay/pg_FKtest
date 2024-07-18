@@ -5,6 +5,7 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -57,11 +58,12 @@ func main() {
 
 	//Create pgrowlocks extension
 	wrapExec(db, "CREATE EXTENSION IF NOT EXISTS pgrowlocks")
+
 	// Checking if tables exist
 	if !tableExists(db, "teams") {
 		wrapExec(db, "CREATE TABLE teams (tid serial PRIMARY KEY)")
 		for i := 1; i <= 10; i++ {
-			wrapExec(db, "INSERT INTO teams (tid) VALUES "+string(rune(i)))
+			wrapExec(db, "INSERT INTO teams (tid) VALUES ("+strconv.FormatInt(int64(i), 10)+")")
 		}
 		fmt.Println("Table created")
 	} else {
