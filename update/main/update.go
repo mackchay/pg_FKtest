@@ -64,10 +64,10 @@ func main() {
 	var query string
 	if *debug {
 		fmt.Println("Query with foreign key")
-		query = "UPDATE teams SET tid = tid + 1000 WHERE tid != 1 "
+		query = "UPDATE pk_table SET pktid = pktid + 1000 WHERE pktid != 1 "
 	} else {
 		fmt.Println("Query without foreign key, use '-fk' for query with foreign key")
-		query = "UPDATE employees SET eid = eid + 1000 WHERE eid != 1"
+		query = "UPDATE fk_table SET fktid = fktid + 1000 WHERE fktid != 1"
 	}
 
 	connStr := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
@@ -82,20 +82,20 @@ func main() {
 	handleError(err)
 
 	// Checking if tables exist
-	if !tableExists(db, "teams") {
-		wrapExecTx(tx, "CREATE TABLE teams (tid serial PRIMARY KEY)")
+	if !tableExists(db, "pk_table") {
+		wrapExecTx(tx, "CREATE TABLE pk_table (pktid serial PRIMARY KEY)")
 		for i := 1; i <= 5; i++ {
-			wrapExecTx(tx, "INSERT INTO teams (tid) VALUES (DEFAULT)")
+			wrapExecTx(tx, "INSERT INTO pk_table (pktid) VALUES (DEFAULT)")
 		}
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
-	if !tableExists(db, "employees") {
+	if !tableExists(db, "fk_table") {
 		wrapExecTx(tx,
-			"CREATE TABLE employees (eid serial PRIMARY KEY, tid INTEGER REFERENCES teams (tid) ON UPDATE CASCADE)")
+			"CREATE TABLE fk_table (fktid serial PRIMARY KEY, pktid INTEGER REFERENCES pk_table (pktid) ON UPDATE CASCADE)")
 		for i := 1; i <= 5; i++ {
-			wrapExecTx(tx, "INSERT INTO employees (eid, tid) VALUES (DEFAULT, "+fmt.Sprintf("%d\n", i)+")")
+			wrapExecTx(tx, "INSERT INTO fk_table (fktid, pktid) VALUES (DEFAULT, "+fmt.Sprintf("%d\n", i)+")")
 		}
 		fmt.Println("Table created")
 	} else {

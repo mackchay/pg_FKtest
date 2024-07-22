@@ -69,10 +69,10 @@ func main() {
 	var query string
 	if *debug {
 		fmt.Println("Query with foreign key")
-		query = "DELETE FROM teams WHERE tid = 1"
+		query = "DELETE FROM pk_table WHERE pktid = 1"
 	} else {
 		fmt.Println("Query without foreign key, use '-fk' for query with foreign key")
-		query = "DELETE FROM employees WHERE eid = 1"
+		query = "DELETE FROM fk_table WHERE fktid = 1"
 	}
 
 	connStr := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
@@ -87,20 +87,20 @@ func main() {
 	handleError(err)
 
 	// Checking if tables exist
-	if !tableExists(db, "teams") {
-		wrapExecTx(tx, "CREATE TABLE teams (tid serial PRIMARY KEY)")
+	if !tableExists(db, "pk_table") {
+		wrapExecTx(tx, "CREATE TABLE pk_table (pktid serial PRIMARY KEY)")
 		for i := 1; i <= 5; i++ {
-			wrapExecTx(tx, "INSERT INTO teams (tid) VALUES (DEFAULT)")
+			wrapExecTx(tx, "INSERT INTO pk_table (pktid) VALUES (DEFAULT)")
 		}
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
-	if !tableExists(db, "employees") {
+	if !tableExists(db, "fk_table") {
 		wrapExecTx(tx,
-			"CREATE TABLE employees (eid serial PRIMARY KEY, tid INTEGER REFERENCES teams (tid) ON DELETE CASCADE)")
+			"CREATE TABLE fk_table (fktid serial PRIMARY KEY, pktid INTEGER REFERENCES pk_table (pktid) ON DELETE CASCADE)")
 		for i := 1; i <= 5; i++ {
-			wrapExecTx(tx, "INSERT INTO employees (eid, tid) VALUES (DEFAULT, "+fmt.Sprintf("%d\n", i)+")")
+			wrapExecTx(tx, "INSERT INTO fk_table (fktid, pktid) VALUES (DEFAULT, "+fmt.Sprintf("%d\n", i)+")")
 		}
 		fmt.Println("Table created")
 	} else {
@@ -121,8 +121,8 @@ func main() {
 	tx, err = db.Begin()
 	handleError(err)
 
-	wrapExecTx(tx, "DROP TABLE employees")
-	wrapExecTx(tx, "DROP TABLE teams")
+	wrapExecTx(tx, "DROP TABLE fk_table")
+	wrapExecTx(tx, "DROP TABLE pk_table")
 	err = tx.Commit()
 	handleError(err)
 }
