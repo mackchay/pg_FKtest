@@ -42,6 +42,37 @@ func wrapQueryTxLocks(tx *sql.Tx, tableName string, goroutine int) {
 	}
 }
 
+func startTransaction(db *sql.DB) {
+	var wg sync.WaitGroup
+	execTx := func(query string, goroutine int, sleepSecs time.Duration) {
+		fmt.Println("Start goroutine: ", goroutine)
+		defer wg.Done()
+		tx, err := db.Begin()
+		handleError(err)
+		//1 query
+		_, err = tx.Exec(query)
+		handleError(err)
+
+		//2 query
+		_, err = tx.Exec(query)
+		handleError(err)
+		wrapQueryTxLocks(tx, "'fk_table'", goroutine)
+		wrapQueryTxLocks(tx, "'pk_table'", goroutine)
+
+		time.Sleep(sleepSecs * time.Second)
+		handleError(err)
+		err = tx.Commit()
+	}
+
+	numTx := 5
+	wg.Add(numTx)
+	for i := 1; i <= numTx; i++ {
+		time.Sleep(time.Second)
+		go execTx("INSERT INTO fk_table(fktid, pktid) VALUES (DEFAULT, 1)", i, 12)
+	}
+	wg.Wait()
+}
+
 func main() {
 	connStr := "user=postgres dbname=postgres password=postgres sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
@@ -69,28 +100,14 @@ func main() {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
 
-	var wg sync.WaitGroup
-	execTx := func(query string, goroutine int, sleepSecs time.Duration) {
-		fmt.Println("Start goroutine: ", goroutine)
-		defer wg.Done()
-		tx, err := db.Begin()
-		handleError(err)
-		_, err = tx.Exec(query)
-		handleError(err)
-		wrapQueryTxLocks(tx, "'fk_table'", goroutine)
-		wrapQueryTxLocks(tx, "'pk_table'", goroutine)
+	var oldLSN, newLSN string
+	err = db.QueryRow("select pg_current_wal_lsn()").Scan(&oldLSN)
+	handleError(err)
+	startTransaction(db)
 
-		time.Sleep(sleepSecs * time.Second)
-		handleError(err)
-		err = tx.Commit()
-	}
+	err = db.QueryRow("select pg_current_wal_lsn()").Scan(&newLSN)
+	handleError(err)
 
-	numTx := 25
-	wg.Add(numTx)
-	for i := 1; i <= numTx; i++ {
-		time.Sleep(time.Second)
-		go execTx("INSERT INTO fk_table(fktid, pktid) VALUES (DEFAULT, 1)", i, 12)
-	}
-
-	wg.Wait()
+	//Print wal_dump command to use in "postgres" user.
+	fmt.Println("pg_waldump", "-s", oldLSN, "-e", newLSN)
 }
