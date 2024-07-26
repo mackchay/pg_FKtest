@@ -56,8 +56,9 @@ func startTransaction(db *sql.DB) {
 		//2 query
 		_, err = tx.Exec(query)
 		handleError(err)
-		wrapQueryTxLocks(tx, "'fk_table'", goroutine)
-		wrapQueryTxLocks(tx, "'pk_table'", goroutine)
+
+		wrapQueryTxLocks(tx, "'employees'", goroutine)
+		wrapQueryTxLocks(tx, "'teams'", goroutine)
 
 		time.Sleep(sleepSecs * time.Second)
 		handleError(err)
@@ -68,7 +69,7 @@ func startTransaction(db *sql.DB) {
 	wg.Add(numTx)
 	for i := 1; i <= numTx; i++ {
 		time.Sleep(time.Second)
-		go execTx("INSERT INTO fk_table(fktid, pktid) VALUES (DEFAULT, 1)", i, 12)
+		go execTx("INSERT INTO employees(employee_id, team_id) VALUES (DEFAULT, 1)", i, 12)
 	}
 	wg.Wait()
 }
@@ -83,18 +84,18 @@ func main() {
 	}(db)
 
 	// Checking if table exists
-	if !tableExists(db, "'pk_table'") {
-		wrapExec(db, "CREATE TABLE pk_table (pktid serial PRIMARY KEY)")
+	if !tableExists(db, "'teams'") {
+		wrapExec(db, "CREATE TABLE teams (team_id serial PRIMARY KEY)")
 		for i := 1; i <= 10; i++ {
-			wrapExec(db, "INSERT INTO pk_table (pktid) VALUES (DEFAULT)")
+			wrapExec(db, "INSERT INTO teams (team_id) VALUES (DEFAULT)")
 		}
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
-	if !tableExists(db, "'fk_table'") {
+	if !tableExists(db, "'employees'") {
 		wrapExec(db,
-			"CREATE TABLE fk_table (fktid serial PRIMARY KEY, pktid INTEGER REFERENCES pk_table (pktid) ON UPDATE CASCADE)")
+			"CREATE TABLE employees (employee_id serial PRIMARY KEY, team_id INTEGER REFERENCES teams (team_id) ON UPDATE CASCADE)")
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")

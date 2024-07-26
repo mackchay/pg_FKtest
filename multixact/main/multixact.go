@@ -43,15 +43,15 @@ func main() {
 	handleError(err)
 
 	// Checking if tables exist
-	if !tableExists(db, "pk_table") {
-		wrapExec(db, "CREATE TABLE pk_table (pktid serial PRIMARY KEY)")
+	if !tableExists(db, "teams") {
+		wrapExec(db, "CREATE TABLE teams (team_id serial PRIMARY KEY)")
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
 	}
-	if !tableExists(db, "fk_table") {
+	if !tableExists(db, "employees") {
 		wrapExec(db,
-			"CREATE TABLE fk_table (fktid serial PRIMARY KEY, pktid INTEGER REFERENCES pk_table (pktid) ON UPDATE CASCADE)")
+			"CREATE TABLE employees (employee_id serial PRIMARY KEY, team_id INTEGER REFERENCES teams (team_id) ON UPDATE CASCADE)")
 		fmt.Println("Table created")
 	} else {
 		fmt.Println("Table already exists, skipping data insertion")
@@ -64,22 +64,22 @@ func main() {
 		tx, err := db.Begin()
 		handleError(err)
 		_, err = tx.Exec(query)
-		rows, err := tx.Query("SELECT * FROM pgrowlocks('fk_table') limit 1")
+		rows, err := tx.Query("SELECT * FROM pgrowlocks('employees') limit 1")
 		handleError(err)
 		for rows.Next() {
 			var lockedRow, locker, multi, xids, modes, pids string
 			err := rows.Scan(&lockedRow, &locker, &multi, &xids, &modes, &pids)
 			handleError(err)
-			fmt.Println("goroutine:", goroutine, ", table: fk_table", ", locked row:", lockedRow, ", locker:", locker,
+			fmt.Println("goroutine:", goroutine, ", table: employees", ", locked row:", lockedRow, ", locker:", locker,
 				", multi:", multi,
 				", xids:", xids, ", modes:", modes, ", pids:", pids)
 		}
-		rows, err = tx.Query("SELECT * FROM pgrowlocks('pk_table') limit 1")
+		rows, err = tx.Query("SELECT * FROM pgrowlocks('teams') limit 1")
 		for rows.Next() {
 			var lockedRow, locker, multi, xids, modes, pids string
 			err := rows.Scan(&lockedRow, &locker, &multi, &xids, &modes, &pids)
 			handleError(err)
-			fmt.Println("goroutine:", goroutine, ", table: pk_table", ", locked row:", lockedRow, ", locker:", locker,
+			fmt.Println("goroutine:", goroutine, ", table: teams", ", locked row:", lockedRow, ", locker:", locker,
 				", multi:", multi,
 				", xids:", xids, ", modes:", modes, ", pids:", pids)
 		}
@@ -93,9 +93,9 @@ func main() {
 	wg.Add(numTx * 2)
 	for i := 1; i <= numTx; i++ {
 		time.Sleep(1 * time.Second)
-		go execTx("SELECT * FROM fk_table FOR SHARE", i, 12)
+		go execTx("SELECT * FROM employees FOR SHARE", i, 12)
 		time.Sleep(1 * time.Second)
-		go execTx("UPDATE pk_table SET pktid = pktid + 100", i+10, 1)
+		go execTx("UPDATE teams SET team_id = team_id + 100", i+10, 1)
 	}
 	wg.Wait()
 }
