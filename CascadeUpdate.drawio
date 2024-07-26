@@ -39,7 +39,7 @@
             <mxRectangle width="240" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="QT6rj63CWjpXJNde_urr-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" source="KNevRsefQJ03b3R65TDT-9" target="mHRXlXbhvssyKXJbwLeI-8" edge="1">
+        <mxCell id="I_MF3LGO9vUpGGuG0iFU-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="KNevRsefQJ03b3R65TDT-9" target="I_MF3LGO9vUpGGuG0iFU-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KNevRsefQJ03b3R65TDT-9" value="teams" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;" parent="1" vertex="1">
@@ -61,14 +61,14 @@
         <mxCell id="QT6rj63CWjpXJNde_urr-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" source="mHRXlXbhvssyKXJbwLeI-1" target="KNevRsefQJ03b3R65TDT-9" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="mHRXlXbhvssyKXJbwLeI-1" value="DELETE X" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="130" y="170" width="70" height="70" as="geometry" />
+        <mxCell id="mHRXlXbhvssyKXJbwLeI-1" value="UPDATE&amp;nbsp;&lt;div&gt;SET X = Y&lt;/div&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="110" y="170" width="90" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="QT6rj63CWjpXJNde_urr-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" source="mHRXlXbhvssyKXJbwLeI-8" target="KNevRsefQJ03b3R65TDT-2" edge="1">
+        <mxCell id="I_MF3LGO9vUpGGuG0iFU-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="I_MF3LGO9vUpGGuG0iFU-1" target="KNevRsefQJ03b3R65TDT-2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="mHRXlXbhvssyKXJbwLeI-8" value="DELETE X" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="300" y="140" width="70" height="70" as="geometry" />
+        <mxCell id="I_MF3LGO9vUpGGuG0iFU-1" value="UPDATE&amp;nbsp;&lt;div&gt;SET X = Y&lt;/div&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="290" y="160" width="90" height="90" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
